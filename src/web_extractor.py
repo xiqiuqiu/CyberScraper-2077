@@ -82,7 +82,6 @@ class WebExtractor:
             domain = domain[4:]
         return domain.split('.')[0].capitalize()
 
-    @lru_cache(maxsize=100)
     async def _cached_api_call(self, content_hash: str, query: str) -> str:
         prompt_template = get_prompt_for_model(self.model_name)
         full_prompt = prompt_template.format(webpage_content=self.preprocessed_content, query=query)
@@ -92,7 +91,19 @@ class WebExtractor:
         else:
             chain = prompt_template | self.model
             response = await chain.ainvoke({"webpage_content": self.preprocessed_content, "query": query})
-            return response.content
+            content = response.content
+            
+            # Handle case where content is a list (e.g. from some LangChain models)
+            if isinstance(content, list):
+                processed_content = ""
+                for item in content:
+                    if isinstance(item, str):
+                        processed_content += item
+                    elif isinstance(item, dict) and "text" in item:
+                        processed_content += item["text"]
+                return processed_content
+                
+            return str(content)
 
     async def process_query(self, user_input: str, progress_callback=None) -> str:
         if user_input.lower().startswith("http"):
