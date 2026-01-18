@@ -1,6 +1,10 @@
 import streamlit as st
 import json
 import asyncio
+import sys
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 from app.streamlit_web_scraper_chat import StreamlitWebScraperChat
 from app.ui_components import display_info_icons, display_message, extract_data_from_markdown, format_data
 from app.utils import loading_animation, get_loading_message
@@ -323,7 +327,7 @@ def main():
 
         # Model selection
         st.subheader("Select Model")
-        default_models = ["gpt-4o-mini", "gpt-3.5-turbo", "gemini-1.5-flash", "gemini-pro"]
+        default_models = ["gpt-4o-mini", "gpt-3.5-turbo", "gemini-1.5-pro", "gemini-2.5-flash"]
         ollama_models = st.session_state.get('ollama_models', [])
         all_models = default_models + [f"ollama:{model}" for model in ollama_models]
         selected_model = st.selectbox("Choose a model", all_models, index=all_models.index(st.session_state.selected_model) if st.session_state.selected_model in all_models else 0)

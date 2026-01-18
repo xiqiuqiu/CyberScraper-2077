@@ -14,8 +14,8 @@ from .scrapers.json_scraper import JSONScraper
 from .utils.proxy_manager import ProxyManager
 from .utils.markdown_formatter import MarkdownFormatter
 from .prompts import get_prompt_for_model
-from langchain.schema.runnable import RunnableSequence
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_core.runnables import RunnableSequence
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 import tiktoken
 import csv
 from bs4 import BeautifulSoup, Comment
@@ -98,8 +98,11 @@ class WebExtractor:
         if user_input.lower().startswith("http"):
             parts = user_input.split(maxsplit=3)
             url = parts[0]
-            pages = parts[1] if len(parts) > 1 and not parts[1].startswith('-') else None
-            url_pattern = parts[2] if len(parts) > 2 and not parts[2].startswith('-') else None
+            potential_pages = parts[1] if len(parts) > 1 and not parts[1].startswith('-') else None
+            pages = potential_pages if potential_pages and re.match(r'^[\d,-]+$', potential_pages) else None
+
+            potential_pattern = parts[2] if len(parts) > 2 and not parts[2].startswith('-') else None
+            url_pattern = potential_pattern if potential_pattern and ('{' in potential_pattern or '=' in potential_pattern) else None
             handle_captcha = '-captcha' in user_input.lower()
 
             website_name = self.get_website_name(url)
